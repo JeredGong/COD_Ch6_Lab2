@@ -192,6 +192,8 @@ else
     echo "[DEBUG] $RC 已存在 PATH 设置，跳过"
 fi
 
+ln -sf "$HOME/.local/ispc/bin/bin/ispc" "$HOME/.local/bin/ispc"
+
 ########################################
 # 7. 完成
 ########################################
