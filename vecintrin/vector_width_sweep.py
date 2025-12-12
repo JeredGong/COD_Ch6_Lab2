@@ -78,12 +78,18 @@ def extract_utilization(run_output: str) -> float:
         raise RuntimeError('Could not find vector utilization in vrun output.')
     return float(match.group(1))
 
+def extract_instructions(run_output: str) -> int:
+    match = re.search(r'Total Vector Instructions:\s*(\d+)', run_output)
+    if not match:
+        raise RuntimeError('Could not find total vector instructions in vrun output.')
+    return int(match.group(1))
+
 
 def save_csv(results, csv_path: Path) -> None:
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     with csv_path.open('w', newline='') as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(['vector_width', 'vector_utilization_percent'])
+        writer.writerow(['vector_width', 'vector_utilization_percent', 'total_vector_instructions'])
         writer.writerows(results)
 
 
@@ -150,8 +156,9 @@ def main() -> None:
             if args.verbose:
                 sys.stdout.write(run_output)
             utilization = extract_utilization(run_output)
-            results.append((width, utilization))
-            print(f'Vector utilization @ width {width}: {utilization:.2f}%')
+            instructions = extract_instructions(run_output)
+            results.append((width, utilization, instructions))
+            print(f'Vector utilization @ width {width}: {utilization:.2f}% with {instructions} vector instructions')
     finally:
         if args.keep_width:
             print('Keeping the last VECTOR_WIDTH change as requested.')
@@ -169,8 +176,8 @@ def main() -> None:
         print('Plot generation skipped per --skip-plot.')
 
     print('\nSweep complete. Results:')
-    for width, utilization in results:
-        print(f'  width {width:2d} -> {utilization:6.2f}%')
+    for width, utilization, instructions in results:
+        print(f'  width {width:2d} -> {utilization:6.2f}% : {instructions} vector instructions')
 
 
 if __name__ == '__main__':
